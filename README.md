@@ -1,106 +1,83 @@
-# Start package for [Bulma](http://bulma.io)
+# bussola
+Find yourself in the middle of all the services you have.
+Bússola means compass in Portuguese.
 
-Tiny npm package that includes the `npm` **dependencies** you need to **build your own website** with Bulma.
+## Usage
 
-<a href="http://bulma.io"><img src="https://raw.githubusercontent.com/jgthms/bulma-start/master/bulma-start.png" alt="Bulma: a Flexbox CSS framework" style="max-width:100%;" width="600" height="315"></a>
+Define your architecture in a yaml file, like the following:
 
-## Install
-
-```sh
-npm install bulma-start
-```
-_or_
-
-```sh
-yarn add bulma-start
-```
-
-## What's included
-
-The `npm` dependencies included in `package.json` are:
-
-* <code>[bulma](https://github.com/jgthms/bulma)</code>
-* <code>[node-sass](https://github.com/sass/node-sass)</code> to compile your own Sass file
-* <code>[postcss-cli](https://github.com/postcss/postcss-cli)</code> and <code>[autoprefixer](https://github.com/postcss/autoprefixer)</code> to add support for older browsers
-* <code>[babel-cli](https://babeljs.io/docs/usage/cli/)</code>, <code>[babel-preset-env](https://github.com/babel/babel-preset-env)</code> and <code>[babel-preset-es2015-ie](https://github.com/jmcriffey/babel-preset-es2015-ie)</code> for compiling ES6 JavaScript files
-
-Apart from `package.json`, the following files are included:
-
-* `.babelrc` configuration file for [Babel](https://babeljs.io/)
-* `.gitignore` common [Git](https://git-scm.com/) ignored files
-* `index.html` this HTML5 file
-* `_sass/main.scss` a basic SCSS file that **imports Bulma** and explains how to **customize** your styles, and compiles to `css/main.css`
-* `_javascript/main.js` an ES6 JavaScript that compiles to `lib/main.js`
-
-
-## Get your feet wet
-
-This package is meant to provide a **good starting point** for working with Bulma.
-
-When installing this package with the commands above, it landed in `$HOME/node_packages/bulma-start`.
-In order to use it as a **template** for your **project**, you might consider copying it to a better suited location:
-
-```sh
-cd $HOME/projects
-cp -a $HOME/node_modules/bulma-start my-bulma-project
+```yaml
+units:
+  - name: avatar_service
+    type: service
+    metadata:
+      context: profile
+      location: kubernetes_cluster
+      team: user_profile_team
+    dependsOn:
+    - avatar_database
 ```
 
-Alternatively, you could do something similar with a GitHub clone as well.
+## From the command line
 
-```sh
-cd $HOME/projects
-git clone https://github.com/jgthms/bulma-start
-mv bulma-start my-bulma-project
-rm -rf my-bulma-project/.git     # cut its roots
+### Compile
+
+```bash
+go build cmd/main.go
 ```
 
-Now, that you prepared the groundwork for your project, set up Bulma and run the watchers:
+### Run
 
-```sh
-cd my-bulma-project
-npm install
-npm start
+Get your graphviz result:
+
+```bash
+cat your_data.yaml | ./main -directives a,b,c > graph.dot
 ```
 
-As long as `npm start` is running, it will **watch** your changes. You can edit `_sass/main.scss` and `_javascript/main.js` at will. Changes are **immediately** compiled to their destinations, where `index.html` will pick them up upon reload in your browser.
+And convert your .dot file into png/svg/etc.
 
-Some controlling output is written to the `npm start` console in that process:
+### Poor man's graphviz
 
-```sh
-_javascript/main.js -> lib/main.js
-
-=> changed: $HOME/projects/start-with-bulma/_sass/main.scss
-Rendering Complete, saving .css file...
-Wrote CSS to $HOME/projects/start-with-bulma/css/main.css
+```bash
+cat your_data.yaml | ./main -directives a,b,c | pbcopy
 ```
 
-Use `npm run` to show all available commands:
+and throw your results to http://www.webgraphviz.com/ or something similar
 
-```sh
-Lifecycle scripts included in bulma-start:
-  start
-    npm-run-all --parallel css-watch js-watch
 
-available via `npm run-script`:
-  css-build
-    node-sass _sass/main.scss css/main.css
-  css-deploy
-    npm run css-build && npm run css-postcss
-  css-postcss
-    postcss --use autoprefixer --output css/main.css css/main.css
-  css-watch
-    npm run css-build -- --watch
-  deploy
-    npm run css-deploy && npm run js-build
-  js-build
-    babel _javascript --out-dir lib
-  js-watch
-    npm run js-build -- --watch
+### Options
+
+#### Directives
+
+In order to nest your units inside different contexts, you can use the `-directives` option with `d1,d2,d3` syntax.
+
+#### Filtering
+
+You can filter your data by using the `-filter` cli option. The syntax is `k1:v1,v2;k2:v3` and will query your metadata.
+
+## Api
+
+### Compile
+
+```bash
+go build api/main.go
 ```
 
-If you want to learn more, follow these links: [Bulma homepage](http://bulma.io) and [Documentation](http://bulma.io/documentation/overview/start/).
+### Run
 
+This will spin a up a server based on your data, available on the 9999 port.
+```bash
+./main your_data.yaml
+```
 
-## Copyright and license
+### Get available params
 
-Code copyright 2017 Jeremy Thomas. Code released under [the MIT license](https://github.com/jgthms/bulma-start/blob/master/LICENSE).
+```bash
+curl localhost:9999/params
+```
+
+### Render dot file based on params [if any]
+
+```bash
+curl -XPOST -d '{"Filters":{"location":["aws_rds"]}}' localhost:9999/render
+```
