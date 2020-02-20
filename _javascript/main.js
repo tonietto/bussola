@@ -1,9 +1,9 @@
-import * as ace from 'brace';
-import 'brace/mode/yaml';
-import 'brace/theme/github';
-import YAML from 'yamljs';
-import Viz from 'viz.js';
-import { Module, render } from 'viz.js/full.render.js';
+import * as ace from "brace";
+import "brace/mode/yaml";
+import "brace/theme/github";
+import YAML from "yamljs";
+import Viz from "viz.js";
+import { Module, render } from "viz.js/full.render.js";
 
 const dummyData = `
 units:
@@ -23,9 +23,9 @@ units:
       team: team_a
 `;
 
-const editor = ace.edit('editor')
-editor.getSession().setMode('ace/mode/yaml');
-editor.setTheme('ace/theme/github');
+const editor = ace.edit("editor");
+editor.getSession().setMode("ace/mode/yaml");
+editor.setTheme("ace/theme/github");
 editor.setValue(dummyData);
 
 class AllElements {
@@ -35,17 +35,20 @@ class AllElements {
   }
   availableFilters() {
     let filters = {};
-    this.availableDirectives().forEach((directive) => {
+    this.availableDirectives().forEach(directive => {
       let filtersForDirective = {};
-      this.units.forEach((unit) => filtersForDirective[unit.metadata[directive]] = true);
+      this.units.forEach(
+        unit => (filtersForDirective[unit.metadata[directive]] = true)
+      );
       filters[directive] = Object.keys(filtersForDirective);
     });
     return filters;
   }
   availableDirectives() {
     let allDirectives = {};
-    this.units.forEach((unit) =>
-      Object.keys(unit.metadata).forEach((k, v) => allDirectives[k] = true));
+    this.units.forEach(unit =>
+      Object.keys(unit.metadata).forEach(k => (allDirectives[k] = true))
+    );
     return Object.keys(allDirectives);
   }
   filteredGraph(filter, directives) {
@@ -56,7 +59,7 @@ class AllElements {
     dotOutput += "}";
     return dotOutput;
   }
-  getFilteredUnits(filter) {
+  getFilteredUnits() {
     // TODO
     return this.units;
   }
@@ -65,12 +68,12 @@ class AllElements {
       let currentDirective = directives.shift();
       let groups = groupUnitsBy(filteredUnits, currentDirective);
       let output = "";
-      Object.keys(groups).forEach((groupName) => {
+      Object.keys(groups).forEach(groupName => {
         const unitsOfGroup = groups[groupName];
-        if(Boolean(groupName)) {
+        if (groupName) {
           output += `subgraph cluster_${currentDirective}_${groupName} {\n`;
-          output += `href = \"${currentDirective}___${groupName}\";\n`;
-          output += `label = \"${groupName}\";\n`;
+          output += `href = "${currentDirective}___${groupName}";\n`;
+          output += `label = "${groupName}";\n`;
           output += this.plotUnits(unitsOfGroup, directives);
           output += "}\n";
         } else {
@@ -78,51 +81,61 @@ class AllElements {
         }
       });
       return output;
-
     } else {
       let output = "";
-      filteredUnits.forEach((unit) => {
-        output += `${unit.name} [label=\"${unit.name}\"]; \n`;
+      filteredUnits.forEach(unit => {
+        output += `${unit.name} [label="${unit.name}"]; \n`;
       });
       return output;
     }
   }
   resolveConnections(filteredUnits) {
-    const names = filteredUnits.map((u) => u.name);
+    const names = filteredUnits.map(u => u.name);
     let output = "";
-    filteredUnits.forEach((unit) => (unit.dependsOn || []).forEach((dependency) => {
-      if (names.indexOf(dependency) !== -1) {
-        output += `${unit.name} -> ${dependency};`
-      }
-    }));
+    filteredUnits.forEach(unit =>
+      (unit.dependsOn || []).forEach(dependency => {
+        if (names.indexOf(dependency) !== -1) {
+          output += `${unit.name} -> ${dependency};`;
+        }
+      })
+    );
     return output;
   }
 }
 
-const groupUnitsBy = (units, directive) => units.reduce(
-  (result, unit) => ({...result, [unit.metadata[directive] || ""]: [...(result[unit.metadata[directive] || ""] || []), unit]}),
-  {});
+const groupUnitsBy = (units, directive) =>
+  units.reduce(
+    (result, unit) => ({
+      ...result,
+      [unit.metadata[directive] || ""]: [
+        ...(result[unit.metadata[directive] || ""] || []),
+        unit
+      ]
+    }),
+    {}
+  );
 
-document.getElementById("render").onclick = (e) => {
+document.getElementById("render").onclick = e => {
   e.preventDefault();
   const parsedYAML = YAML.parse(editor.getValue());
   window.allElements = new AllElements(parsedYAML);
-  window.output = window.allElements.filteredGraph((parsedYAML.filter || {}), (parsedYAML.directives || []));
+  window.output = window.allElements.filteredGraph(
+    parsedYAML.filter || {},
+    parsedYAML.directives || []
+  );
 
-  new Viz({ Module, render })
-    .renderSVGElement(window.output)
-    .then((element) => {
-      window.graphElement = document.getElementById("graph");
-      graphElement.innerHTML = '';
-      graphElement.appendChild(element);
-    });
+  new Viz({ Module, render }).renderSVGElement(window.output).then(element => {
+    window.graphElement = document.getElementById("graph");
+    window.graphElement.innerHTML = "";
+    window.graphElement.appendChild(element);
+  });
 };
 
-document.getElementById("toggle-editor").onclick = (event) => {
+document.getElementById("toggle-editor").onclick = () => {
   const e = document.getElementById("editor-column");
   const c = document.getElementById("graph-column");
-  e.classList.toggle('is-hidden');
-  e.classList.toggle('is-half');
-  c.classList.toggle('is-full');
-  c.classList.toggle('is-half');
+  e.classList.toggle("is-hidden");
+  e.classList.toggle("is-half");
+  c.classList.toggle("is-full");
+  c.classList.toggle("is-half");
 };
