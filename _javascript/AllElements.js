@@ -7,9 +7,9 @@ export class AllElements {
     this.defaultFilters = params.defaultFilters;
   }
   availableFilters() {
-    let filters = {};
+    const filters = {};
     this.availableDirectives().forEach(directive => {
-      let filtersForDirective = {};
+      const filtersForDirective = {};
       this.units.forEach(
         unit => (filtersForDirective[unit.metadata[directive]] = true)
       );
@@ -18,9 +18,9 @@ export class AllElements {
     return filters;
   }
   availableDirectives() {
-    let allDirectives = {};
+    const allDirectives = {};
     this.units.forEach(unit =>
-      Object.keys(unit.metadata).forEach(k => (allDirectives[k] = true))
+      Object.keys(unit.metadata).forEach((k) => (allDirectives[k] = true))
     );
     return Object.keys(allDirectives);
   }
@@ -32,13 +32,21 @@ export class AllElements {
     dotOutput += "}";
     return dotOutput;
   }
-  getFilteredUnits() {
-    // TODO
-    return this.units;
+  getFilteredUnits(filter) {
+    return this.units.filter(unit => {
+      let included = true;
+      Object.keys(filter).forEach(directive => {
+        const options = filter[directive];
+        if (options.indexOf(unit.metadata[directive]) === -1) included = false;
+      });
+      return included;
+    });
   }
   plotUnits(filteredUnits, directives) {
     if (directives.length) {
-      const currentDirective = directives.shift();
+      const currentDirective = directives[0];
+      const restOfDirectives = directives.slice(1);
+
       const groups = groupUnitsBy(filteredUnits, currentDirective);
       let output = "";
       Object.keys(groups).forEach(groupName => {
@@ -47,10 +55,10 @@ export class AllElements {
           output += `subgraph cluster_${currentDirective}_${groupName} {\n`;
           output += `href = "${currentDirective}___${groupName}";\n`;
           output += `label = "${groupName}";\n`;
-          output += this.plotUnits(unitsOfGroup, directives);
+          output += this.plotUnits(unitsOfGroup, restOfDirectives);
           output += "}\n";
         } else {
-          output += this.plotUnits(unitsOfGroup, directives);
+          output += this.plotUnits(unitsOfGroup, restOfDirectives);
         }
       });
       return output;
@@ -87,4 +95,3 @@ const groupUnitsBy = (units, directive) =>
     }),
     {}
   );
-
