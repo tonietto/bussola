@@ -8,10 +8,27 @@ import { Module, render } from "viz.js/full.render.js";
 import { dummyData } from "./dummyData";
 import { AllElements } from "./AllElements";
 
+/**
+ * Init and config editor
+ */
 const editor = ace.edit("editor");
-editor.getSession().setMode("ace/mode/yaml");
-editor.setTheme("ace/theme/github");
+editor.getSession().setMode('ace/mode/yaml');
+editor.setTheme('ace/theme/github');
 editor.setValue(dummyData);
+editor.commands.addCommand({
+  name: "Render Graph",
+  bindKey: { win: "Ctrl-Enter", mac: "Command-Enter" },
+  exec: () => {
+    window.render();
+  }
+});
+editor.commands.addCommand({
+  name: "Turn on vim mode",
+  bindKey: { win: "Ctrl-Shift-Enter", mac: "Command-Shift-Enter" },
+  exec: (editor) => {
+    editor.setKeyboardHandler("ace/keyboard/vim");
+  }
+});
 
 document.getElementById("render").onclick = () => {
   const parsedYAML = YAML.parse(editor.getValue());
